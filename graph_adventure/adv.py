@@ -1,8 +1,20 @@
 from room import Room
 from player import Player
 from world import World
-
 import random
+
+class Stack():
+    def __init__(self):
+        self.stack = []
+    def push(self, value):
+        self.stack.append(value)
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+    def size(self):
+        return len(self.stack)
 
 # Load world
 world = World()
@@ -21,7 +33,7 @@ player = Player("Name", world.startingRoom)
 
 
 # FILL THIS IN
-# traversalPath = ['n', 's']
+# traversalPath = ['s','s','w','w','n','n','e','e','e', 'e','w','w','n','n']
 
 # add starting room to stack
 # initialize previous to null
@@ -37,8 +49,28 @@ player = Player("Name", world.startingRoom)
     # 1) Add to stack and tracked simultaneously, or add to tracked after pop
     # 2) Use previous path to find path to next, or use breadth first
 
-print(world.startingRoom)
+def find_path(prev_room, curr_room):
+    '''
+        finds a path from the previous room to the current room
+        returns an array of cardinal directions ['n', 's']
+    '''
+    if prev_room is None:
+        return []
+    pass
 
+traversalPath = []
+prev_room = None
+stack = Stack()
+
+while stack.size() > 0:
+    curr_room = stack.pop()
+    # find path
+    path = find_path(prev_room, curr_room)
+    traversalPath.extend(path)  # add our returned path to our traversalPath
+    for next_room in curr_room:
+        # add to stack/tracked
+        pass
+    prev_room = curr_room
 
 # TRAVERSAL TEST
 visited_rooms = set()
