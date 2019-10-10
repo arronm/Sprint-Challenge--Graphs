@@ -56,25 +56,32 @@ def find_path(prev_room, curr_room):
     '''
     if prev_room is None:
         return []
-    pass
+    return []
 
 traversalPath = []
 prev_room = None
 stack = Stack()
 stack.push(world.startingRoom)  # add starting room to stack
+tracked = {0: [0]}
 
 # print(dir(world.startingRoom))
-print(world.startingRoom.getExits())
+# print(world.startingRoom.getExits())
 
 while stack.size() > 0:
     curr_room = stack.pop()
+    # print('curr', curr_room.id)
     # find path
     path = find_path(prev_room, curr_room)
     traversalPath.extend(path)  # add our returned path to our traversalPath
     for direction in curr_room.getExits():
         # add to stack/tracked
+        # print('direction', direction)
         next_room = getattr(curr_room, f'{direction}_to')
-        pass
+        # print('id', next_room.id)
+        if next_room.id not in tracked:
+            stack.push(next_room)
+            tracked[next_room.id] = [*tracked[curr_room.id], next_room.id]
+            print(tracked[next_room.id])
     prev_room = curr_room
 
 
