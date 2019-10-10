@@ -61,16 +61,22 @@ def find_path(prev_room, curr_room):
 traversalPath = []
 prev_room = None
 stack = Stack()
+stack.push(world.startingRoom)  # add starting room to stack
+
+# print(dir(world.startingRoom))
+print(world.startingRoom.getExits())
 
 while stack.size() > 0:
     curr_room = stack.pop()
     # find path
     path = find_path(prev_room, curr_room)
     traversalPath.extend(path)  # add our returned path to our traversalPath
-    for next_room in curr_room:
+    for direction in curr_room.getExits():
         # add to stack/tracked
+        next_room = getattr(curr_room, f'{direction}_to')
         pass
     prev_room = curr_room
+
 
 # TRAVERSAL TEST
 visited_rooms = set()
