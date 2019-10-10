@@ -37,6 +37,8 @@ player = Player("Name", world.startingRoom)
     # 1) Add to stack and tracked simultaneously, or add to tracked after pop
     # 2) Use previous path to find path to next, or use breadth first
 
+print(world.startingRoom)
+
 
 # TRAVERSAL TEST
 visited_rooms = set()
