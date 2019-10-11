@@ -73,31 +73,31 @@ def find_bft_path(start_room, end_room):
 
     print(f'Find {start_room.id} -> {end_room.id}')
     if start_room == end_room:
-        print(start_room)
+        print(start_room, 'gggggggggg')
         return
 
     queue = Queue()
     visited = set()
     previous = {}
-    queue.enqueue([start_room])
+    queue.enqueue([start_room]) # [7] [0]
 
     while queue.size() > 0:
-        route = queue.dequeue()
-        room = route[-1]
+        route = queue.dequeue() #[7] [0]
+        room = route[-1] # 7 0
         if room.id not in visited:
             # print(f'room {room.id}, end {end_room.id}')
-            if room == end_room:
+            if room == end_room: # 7 != 3 0 != 3
                 # create path from route
                 print(route)
                 return path
-            visited.add(room.id)
+            visited.add(room.id) # {7, 8, 9, 0}
             # for next_vert in self.vertices[room]:
             #     next_route = list(route)
             #     next_route.append(next_vert)
             #     queue.enqueue(next_route)
             for direction in curr_room.getExits():
-                next_room = getattr(curr_room, f'{direction}_to')
-                queue.enqueue([*path, next_room])
+                next_room = getattr(curr_room, f'{direction}_to') # 8 > 0
+                queue.enqueue([*path, next_room]) # [7, 8], [7, 0]
     # queue = Queue()
     # queue.enqueue([start_room])
     # visited = {}
