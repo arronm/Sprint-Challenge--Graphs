@@ -28,6 +28,13 @@ class Room:
         return exits
     def getExitsString(self):
         return f"Exits: [{', '.join(self.getExits())}]"
+    def getConnectedRoomIDs(self):
+        ids = []
+        ids.append(self.n_to.id if self.n_to else self.n_to)
+        ids.append(self.e_to.id if self.e_to else self.e_to)
+        ids.append(self.s_to.id if self.s_to else self.s_to)
+        ids.append(self.w_to.id if self.w_to else self.w_to)
+        return ids
     def connectRooms(self, direction, connectingRoom):
         if direction == "n":
             self.n_to = connectingRoom
