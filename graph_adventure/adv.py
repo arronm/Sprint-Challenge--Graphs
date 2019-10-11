@@ -66,16 +66,76 @@ player = Player("Name", world.startingRoom)
 traversalPath = []
 tracked = {0: [0]}
 
+def find_bft_nearest(start_room, visited):
+    '''
+        return a Tuple (room, path)
+    '''
+    # explore surrounding area for next room
+    # that has an unvisited neighbor
+    path = []
+    directions = ['n', 'e', 's', 'w']
+    queue = Queue()
+    queue.enqueue([start_room])
+    # print('visited', visited)
+
+    while queue.size() > 0:
+        route = queue.dequeue()
+        curr_room = route[-1]
+        # print(curr_room.id)
+        # connectedRooms = curr_room.getConnectedRoomIDs()
+
+        for direction in curr_room.getExits():
+            next_room = getattr(curr_room, f'{direction}_to')
+            # print(f'{next_room.id} in {visited}')
+            if next_room.id not in visited:
+                for i in range(len(route) - 1):
+                    ids = route[i].getConnectedRoomIDs()
+                    path.append(directions[ids.index(route[i + 1].id)])
+                path.append(direction)
+                # print(path)
+                return (next_room, path)
+            queue.enqueue([*route, next_room])
+            if len(visited) == len(roomGraph):
+                break
+            
+
+    
+
+def connected_path(start_room, end_room):
+    path = []
+    directions = ['n', 'e', 's', 'w']
+
+    if start_room is None:
+        return path
+    
+    if start_room == end_room:
+        return path
+    
+    connectedRooms = start_room.getConnectedRoomIDs()
+
+    if end_room.id in connectedRooms:
+        path.append(directions[connectedRooms.index(end_room.id)])
+        return path
+
+    return False    
+
+
 def find_bft_path(start_room, end_room):
     path = []
     directions = ['n', 'e', 's', 'w']
-    if prev_room is None:
+
+    if start_room is None:
         return path
 
     # print(f'Find {start_room.id} -> {end_room.id}')
     if start_room == end_room:
         return path
-
+    
+    # check if there is a direct connection
+    if end_room.id in start_room.getConnectedRoomIDs():
+        path.append(directions[start_room.getConnectedRoomIDs().index(end_room.id)])
+        return path
+    # print('indirect path', start_room.id)
     queue = Queue()
     visited = set()
     previous = {}
@@ -94,27 +154,8 @@ def find_bft_path(start_room, end_room):
                 return path
             visited.add(curr_room.id)
             for direction in curr_room.getExits():
-                next_room = getattr(curr_room, f'{direction}_to') # 8 > 0
-                queue.enqueue([*route, next_room]) # [7, 8], [7, 0]
-    
-    # print([room.id for room in route])
-    # queue = Queue()
-    # queue.enqueue([start_room])
-    # visited = {}
-    # directions = ['n', 'e', 's', 'w']
-
-    # while queue.size() > 0:
-    #     path = queue.dequeue()
-    #     curr_room = path[-1]
-
-    #     if curr_room.id not in visited:
-    #         visited[curr_room.id] = path
-
-    #         for direction in curr_room.getExits():
-    #             next_room = getattr(curr_room, f'{direction}_to')
-    #             queue.enqueue([*path, next_room])
-    
-    print('BFT:', path)
+                next_room = getattr(curr_room, f'{direction}_to')
+                queue.enqueue([*route, next_room])
 
 
 def find_path(prev_room, target_room):
@@ -209,22 +250,30 @@ def find_path(prev_room, target_room):
 
 prev_room = None
 stack = Stack()
+visited = set()
 stack.push(world.startingRoom)  # add starting room to stack
-# print('s', 5 in world.startingRoom.getConnectedRoomIDs())
-# print(world.startingRoom.getConnectedRoomIDs().index(5))
-
-# print(dir(world.startingRoom))
-# print(world.startingRoom.getExits())
 
 while stack.size() > 0:
     curr_room = stack.pop()
-    # print('curr', curr_room.id)
     # find path
-    path = find_path(prev_room, curr_room)
+    # path = find_path(prev_room, curr_room)
     # path = find_bft_path(prev_room, curr_room)
+    # print('stuck', curr_room.id)
+    # print(len(visited))
+
+    path = connected_path(prev_room, curr_room)
+    if path is False:
+        print('room', curr_room.id)
+        print('prev', prev_room.id)
+        print(len(visited))
+        if len(visited) == len(roomGraph):
+            break
+        stack.push(curr_room)
+        curr_room, path = find_bft_nearest(prev_room, visited)
+
+
     traversalPath.extend(path)  # add our returned path to our traversalPath
-    dirs = curr_room.getExits() #[::-1]
-    # print(curr_room.getExits()[::-1])
+    dirs = curr_room.getExits()
     random.shuffle(dirs)
     for direction in dirs:
         # add to stack/tracked
@@ -234,11 +283,10 @@ while stack.size() > 0:
         if next_room.id not in tracked:
             stack.push(next_room)
             tracked[next_room.id] = [*tracked[curr_room.id], next_room.id]
-
+    visited.add(curr_room.id)
     prev_room = curr_room
 
-# print(traversalPath)
-
+print(traversalPath)
 # TRAVERSAL TEST
 visited_rooms = set()
 player.currentRoom = world.startingRoom
@@ -254,6 +302,9 @@ else:
     print(f"{len(roomGraph) - len(visited_rooms)} unvisited rooms")
 
 
+# print(world.startingRoom)
+# Room grid is roomGrid[x][y]
+# print(world.roomGrid[13][16])
 
 #######
 # UNCOMMENT TO WALK AROUND
