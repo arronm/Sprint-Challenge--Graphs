@@ -1,8 +1,34 @@
 from room import Room
 from player import Player
 from world import World
-
 import random
+
+class Queue():
+    def __init__(self):
+        self.queue = []
+    def enqueue(self, value):
+        self.queue.append(value)
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return None
+    def size(self):
+        return len(self.queue)
+
+
+class Stack():
+    def __init__(self):
+        self.stack = []
+    def push(self, value):
+        self.stack.append(value)
+    def pop(self):
+        if self.size() > 0:
+            return self.stack.pop()
+        else:
+            return None
+    def size(self):
+        return len(self.stack)
 
 # Load world
 world = World()
@@ -21,8 +47,291 @@ player = Player("Name", world.startingRoom)
 
 
 # FILL THIS IN
-traversalPath = ['n', 's']
+# traversalPath = ['s','s','w','w','n','n','e','e','e', 'e','w','w','n','n']
 
+# add starting room to stack
+# initialize previous to null
+# while something is in my stack
+    # set current to stack.pop
+    # find path from previous to current
+        # record directions in traversalPath
+    # for next in current:
+        # add to stack / tracked
+    # set previous to current
+
+# Two tests, four versions:
+    # 1) Add to stack and tracked simultaneously, or add to tracked after pop
+    # 2) Use previous path to find path to next, or use breadth first
+
+traversalPath = []
+tracked = {0: [0]}
+record = 954
+# record = 990
+
+
+def find_bft_nearest(start_room, visited):
+    '''
+        return a Tuple (room, path)
+    '''
+    # explore surrounding area for next room
+    # that has an unvisited neighbor
+    path = []
+    directions = ['n', 'e', 's', 'w']
+    queue = Queue()
+    queue.enqueue([start_room])
+    tracked = {}
+    # print('visited', visited)
+
+    # queue <0>
+
+    while queue.size() > 0:
+        route = queue.dequeue() # <0> <0, 5>
+        curr_room = route[-1] # 0 5
+        # print(curr_room.id)
+        # connectedRooms = curr_room.getConnectedRoomIDs()
+
+        for direction in curr_room.getExits(): # [n, w] / [s, e]
+            next_room = getattr(curr_room, f'{direction}_to') #0.n_to, 0.w_to
+            # if (len(traversalPath) + len(route)) > record:
+            #     break
+            # print(f'{next_room.id} in {visited}')
+            if next_room.id not in visited: # or (len(traversalPath) + len(route)) > record:
+                for i in range(len(route) - 1):
+                    ids = route[i].getConnectedRoomIDs()
+                    path.append(directions[ids.index(route[i + 1].id)])
+                path.append(direction)
+                # print(path)
+                return (next_room, path)
+            if next_room.id not in tracked:
+                tracked[next_room.id] = True
+                queue.enqueue([*route, next_room]) # <0, 5>
+            if len(visited) == len(roomGraph):
+                break
+
+
+def connected_path(start_room, end_room):
+    path = []
+    directions = ['n', 'e', 's', 'w']
+
+    if start_room is None:
+        return path
+    
+    if start_room == end_room:
+        return path
+    
+    connectedRooms = start_room.getConnectedRoomIDs()
+
+    if end_room.id in connectedRooms:
+        path.append(directions[connectedRooms.index(end_room.id)])
+        return path
+
+    return False    
+
+
+def find_bfs_path(start_room, end_room):
+    path = []
+    directions = ['n', 'e', 's', 'w']
+
+    if start_room is None:
+        return path
+
+    # print(f'Find {start_room.id} -> {end_room.id}')
+    if start_room == end_room:
+        return path
+    
+    # check if there is a direct connection
+    if end_room.id in start_room.getConnectedRoomIDs():
+        path.append(directions[start_room.getConnectedRoomIDs().index(end_room.id)])
+        return path
+    # print('indirect path', start_room.id)
+    queue = Queue()
+    visited = set()
+    previous = {}
+    queue.enqueue([start_room])
+
+    while queue.size() > 0:
+        route = queue.dequeue()
+        curr_room = route[-1]
+        if curr_room.id not in visited:
+            if curr_room == end_room:
+                # create path from route
+                for i in range(len(route) - 1):
+                    ids = route[i].getConnectedRoomIDs()
+                    path.append(directions[ids.index(route[i + 1].id)])
+                # print(path)
+                return path
+            visited.add(curr_room.id)
+            for direction in curr_room.getExits():
+                next_room = getattr(curr_room, f'{direction}_to')
+                queue.enqueue([*route, next_room])
+
+
+def find_path(prev_room, target_room):
+    '''
+        finds a path from the previous room to the current room
+        returns an array of cardinal directions ['n', 's']
+    '''
+    path = []
+    if prev_room is None:
+        return path
+    directions = ['n', 'e', 's', 'w']
+    reverse_directions = {'n': 's', 'e': 'w', 's': 'n', 'w': 'e'}
+    connected = False
+    # how do I find out directions from here
+
+
+    # print(traversalPath[prev_room.id])
+    # print((prev_room.id, target_room.id))
+    # print(tracked[prev_room.id])
+
+    # Loop over all nodes in the target_room path
+    for i in range(len(tracked[target_room.id])):
+        pass
+
+    # print(tracked[prev_room.id])
+    for i in range(len(tracked[prev_room.id])):
+        # print('check:', tracked[prev_room.id][-(i + 1)])
+        room1 = tracked[prev_room.id][-1]
+        room1_connected = prev_room.getConnectedRoomIDs()
+        for j in range(len(tracked[target_room.id])):
+            # print('to:', tracked[target_room.id][-(j + 1)])
+            room2 = tracked[target_room.id][-(j + 1)]
+            # print(f'room1 {room1} to room2 {room2}')
+            # check if room 1 connects to room 2
+            if room2 in prev_room.getConnectedRoomIDs():
+                # Find index to get directions
+                direction = directions[prev_room.getConnectedRoomIDs().index(room2)]
+                # add path to traversed
+                traversalPath.append(direction)
+                # break out of both for loops
+                # print(f'room {room1} and {room2} connected')
+                connected = True
+                break
+        if connected:
+            break
+
+        # add reverse travel to path
+        # Can assume previous room is in connected rooms
+        # direction = directions[tracked[prev_room.id][-2]] # this should not work
+        direction = directions[prev_room.getConnectedRoomIDs().index(tracked[prev_room.id][-2])]
+        # print('tracked:', tracked[prev_room.id])
+        # print('direction:', direction)
+        prev_room = getattr(prev_room, f'{direction}_to')
+        # print(f'next prev room: {prev_room.id}')
+        traversalPath.append(direction)
+    # print(f'{prev_room.id}->{target_room.id}')
+    # print(traversalPath)
+    # if we end up out here and we haven't made a connection
+    # something definitely broke.
+    if connected is False:
+        print("Ut oh, something went wrong...")
+    
+
+    # Otherwise find index of current number inside target room
+    if room2 != target_room.id:
+        # print(f'rooms: {prev_room.getConnectedRoomIDs()}')
+        # print(f'rooms: {prev_room.getConnectedRoomIDs().index(room2)}')
+        # print(f'target: {tracked[target_room.id]}, room2: {room2}')
+        direction = directions[prev_room.getConnectedRoomIDs().index(room2)]
+        prev_room = getattr(prev_room, f'{direction}_to')
+        # traversalPath.append(direction)
+        # print('passes')
+
+        # print(f'travel from {room2} to {target_room.id}')
+    # find index in path
+    # print(tracked[prev_room.id])
+    while room2 != target_room.id:
+        index = tracked[target_room.id].index(room2)
+        # print(prev_room.id, 'prev id')
+        direction = directions[prev_room.getConnectedRoomIDs().index(tracked[target_room.id][index + 1])]
+        prev_room = getattr(prev_room, f'{direction}_to')
+        traversalPath.append(direction)
+        room2 = tracked[target_room.id][index + 1]
+        # traverse the target_room path, adding to path and incrementing room2
+        # direction = directions[0]
+        # print(f'index: {tracked[target_room.id].index(room2)}')
+    # Continue down that path until we arrive at target room
+
+    # print(tracked)
+    return path
+
+
+attempts = 0
+start_dirs = ['n', 'e', 's', 'w']
+while True:
+    traversalPath = []
+    prev_room = None
+    stack = Stack()
+    visited = set()
+    stack.push(world.startingRoom)  # add starting room to stack
+
+    cycle = attempts % 4
+    cycle_dirs = [*start_dirs[cycle:], *start_dirs[:cycle]]
+    # steps = 0
+
+    while stack.size() > 0:
+
+        # directions == start_directions[outer loop % 4:] + start_directions[:outer loop % 4]
+
+
+        curr_room = stack.pop()
+
+        path = connected_path(prev_room, curr_room)
+        if path is False:
+            if len(visited) == len(roomGraph):
+                break
+            stack.push(curr_room)
+            curr_room, path = find_bft_nearest(prev_room, visited)
+
+        traversalPath.extend(path)  # add our returned path to our traversalPath
+
+        # dirs = curr_room.getExits()
+        # random.shuffle(dirs)
+        # for direction in dirs:
+        #     # add to stack/tracked
+        #     # print('direction', direction)
+        #     next_room = getattr(curr_room, f'{direction}_to')
+        #     # print('id', next_room.id)
+        #     # if next_room.id not in tracked:
+        #     if next_room.id not in visited:
+        #         stack.push(next_room)
+        #         # tracked[next_room.id] = [*tracked[curr_room.id], next_room.id]
+        
+        directions = cycle_dirs
+        random.shuffle(directions)
+        for direction in directions:
+            if direction in curr_room.getExits():
+                next_room = getattr(curr_room, f'{direction}_to')
+                if next_room.id not in visited:
+                    stack.push(next_room)
+
+        # directions = [*cycle_dirs[steps % 4:], *cycle_dirs[:steps % 4]]
+        # if len(traversalPath) == 0:
+        #     directions = cycle_dirs
+        # else:
+        #     travelled = traversalPath[-1]
+        #     travel_dir = cycle_dirs.index(travelled)
+        #     directions = [*cycle_dirs[travel_dir:], *cycle_dirs[:travel_dir]]
+        # for direction in directions:
+        #     if direction in curr_room.getExits():
+        #         next_room = getattr(curr_room, f'{direction}_to')
+        #         if next_room.id not in visited:
+        #             stack.push(next_room)
+
+        visited.add(curr_room.id)
+        prev_room = curr_room
+        # steps += 1
+    
+    attempts += 1
+
+    if len(traversalPath) < record:
+        break
+
+
+if len(traversalPath) < record:
+    print(traversalPath)
+
+# traversalPath = ['s', 'w', 'e', 'n', 'n', 's', 'w', 'w', 's', 'w', 's', 's', 'n', 'n', 'e', 'n', 'e', 'n', 'w', 'w', 'w', 's', 's', 's', 's', 'w', 's', 'w', 'e', 'n', 'w', 'e', 'e', 's', 's', 's', 's', 'w', 's', 's', 's', 'n', 'n', 'w', 's', 'w', 'e', 's', 'w', 'e', 'n', 'n', 'e', 'n', 'e', 's', 's', 's', 's', 'w', 'e', 'n', 'e', 's', 'n', 'e', 's', 's', 'e', 'w', 's', 'w', 'e', 'n', 'n', 'n', 'w', 'w', 'n', 'n', 'n', 'n', 'n', 'w', 's', 'w', 'w', 'w', 'w', 'e', 's', 's', 's', 's', 's', 's', 'e', 'w', 'n', 'e', 'w', 'n', 'n', 'n', 'w', 'w', 'w', 'w', 'e', 'e', 'e', 's', 'w', 'e', 's', 'w', 'e', 's', 's', 'n', 'w', 'w', 'e', 'e', 'n', 'n', 'n', 'e', 'n', 'w', 'w', 'e', 'e', 'n', 'e', 'e', 's', 'w', 's', 'n', 'e', 'n', 'e', 'n', 'w', 'w', 'n', 's', 'w', 'n', 'w', 'w', 'n', 'w', 'e', 's', 'e', 'n', 'n', 'w', 'n', 'w', 'e', 'e', 'n', 'n', 's', 'w', 'n', 's', 'w', 'e', 'e', 'e', 'e', 'e', 'n', 'w', 'w', 'e', 'e', 'e', 's', 'n', 'n', 'w', 'w', 'w', 'w', 'e', 'n', 'w', 'w', 's', 'n', 'w', 'e', 'e', 'n', 'n', 's', 'w', 'w', 'w', 'e', 'e', 'e', 's', 'e', 'n', 's', 's', 'e', 'e', 'e', 'n', 'w', 'w', 'e', 'n', 'w', 'e', 's', 'e', 's', 'e', 'n', 's', 'e', 'n', 's', 'e', 'n', 's', 'e', 'e', 'n', 'n', 'w', 'w', 'w', 'n', 'n', 'w', 'n', 's', 'e', 's', 's', 'w', 'n', 's', 'w', 'n', 'w', 'n', 'w', 'w', 'n', 'n', 'n', 's', 's', 'w', 'e', 's', 'w', 'w', 's', 'w', 'e', 'n', 'w', 'e', 'e', 'e', 'e', 'n', 'n', 's', 's', 'e', 'n', 'n', 'n', 'w', 'e', 'n', 'n', 's', 's', 's', 's', 's', 's', 'w', 'w', 'e', 'e', 'e', 'n', 'n', 'n', 'n', 's', 's', 's', 's', 's', 'e', 'e', 'e', 'e', 'n', 'n', 'n', 'w', 'n', 's', 'w', 'n', 'w', 'e', 's', 'e', 'e', 's', 's', 'w', 'n', 's', 'e', 's', 'e', 'n', 's', 'e', 's', 'n', 'n', 'n', 'n', 'e', 'e', 'w', 'w', 'n', 'e', 'e', 'n', 's', 'e', 'e', 'w', 'n', 'e', 'n', 'e', 'n', 's', 'e', 'n', 's', 'e', 'w', 'w', 'w', 's', 'e', 'w', 'w', 'n', 'n', 'e', 'n', 'n', 's', 'e', 'n', 'e', 's', 'n', 'e', 'w', 'w', 'n', 's', 's', 'w', 's', 'w', 'n', 'n', 's', 's', 's', 'w', 'n', 'n', 'n', 'n', 'e', 'e', 'w', 'w', 's', 'w', 'n', 'w', 'w', 'e', 'e', 's', 'w', 's', 's', 's', 'w', 'n', 'n', 's', 'w', 'n', 's', 'e', 's', 'w', 'w', 'n', 'n', 'n', 'n', 's', 's', 's', 'w', 'n', 'n', 'w', 'e', 's', 's', 'e', 's', 'w', 's', 'w', 'e', 'n', 'w', 'n', 's', 'w', 'n', 's', 'e', 'e', 'e', 'e', 'e', 'e', 's', 'e', 'w', 'n', 'e', 'n', 'n', 's', 's', 'w', 's', 's', 's', 's', 'w', 'n', 'n', 'w', 'n', 'e', 'w', 'w', 'e', 's', 'e', 's', 's', 'e', 's', 's', 'w', 's', 'w', 'e', 's', 'e', 's', 'e', 'n', 'e', 'n', 'e', 'n', 'e', 'n', 'n', 'e', 'n', 'n', 'e', 'e', 'n', 's', 'e', 'n', 's', 'e', 'w', 'w', 'w', 'n', 's', 'w', 's', 's', 'w', 'n', 's', 's', 's', 'w', 'n', 'n', 'n', 's', 's', 's', 's', 'w', 's', 'w', 'n', 'n', 'e', 'n', 'n', 's', 's', 'w', 'n', 'n', 's', 's', 's', 's', 's', 'e', 'e', 'n', 'e', 'n', 'e', 'n', 'n', 'e', 'e', 'n', 'e', 'w', 's', 'w', 'n', 'n', 'e', 'e', 'e', 's', 'n', 'w', 'w', 'w', 's', 's', 'w', 's', 'e', 'e', 's', 'e', 'e', 'e', 's', 'n', 'w', 'w', 'w', 'n', 'e', 'e', 'w', 'n', 'e', 'w', 's', 'w', 'w', 's', 'n', 'w', 's', 'w', 's', 'e', 'e', 'e', 'e', 'e', 's', 'n', 'w', 'w', 'w', 'w', 'w', 'w', 's', 'e', 's', 'n', 'e', 's', 'e', 'e', 'e', 'n', 's', 'e', 'w', 'w', 'w', 'w', 'n', 'e', 'e', 'w', 'w', 'w', 'w', 'w', 's', 'e', 's', 's', 'e', 'w', 'n', 'e', 'e', 'e', 'e', 'e', 'w', 'w', 'w', 's', 's', 's', 's', 's', 'e', 'e', 'w', 'w', 'n', 'e', 'e', 'w', 'w', 'n', 'e', 'e', 'w', 'n', 's', 'w', 'n', 'n', 'e', 'e', 'e', 'w', 's', 'n', 'w', 'w', 'n', 'w', 'w', 'n', 'w', 's', 's', 'n', 'n', 'n', 'w', 'w', 's', 'e', 'w', 's', 's', 's', 's', 's', 's', 's', 'n', 'e', 's', 's', 'w', 's', 's', 'n', 'n', 'e', 's', 's', 's', 'w', 's', 'n', 'e', 's', 's', 'n', 'n', 'n', 'n', 'e', 'e', 'e', 'n', 'e', 's', 's', 'n', 'n', 'e', 'e', 'w', 's', 's', 'e', 'w', 's', 's', 'n', 'n', 'n', 'n', 'w', 'w', 's', 'w', 'w', 's', 's', 's', 'n', 'n', 'e', 's', 's', 'n', 'n', 'e', 's', 's', 'n', 'n', 'w', 'w', 'n', 'w', 'n', 'n', 'n', 'w', 'n', 'n', 'n', 'e', 'e', 's', 's', 's', 's', 's', 'e', 'w', 'n', 'n', 'n', 'e', 's', 's', 'e', 'e', 'e', 'e', 'w', 'w', 'w', 'w', 'n', 'e', 'w', 'n', 'w', 'n', 'e', 'n', 'e', 's', 's', 'n', 'n', 'w', 's', 'w', 'n', 'w', 's', 's', 'n', 'n', 'w', 'n', 'w', 's', 's', 's', 's', 's', 's', 's', 's', 's', 's', 'n', 'n', 'n', 'n', 'n', 'w', 'w', 's', 's', 'n', 'w', 's', 'n', 'e', 'e', 's', 's', 's', 'n', 'n', 'n', 'w', 'n', 'w', 'n', 's', 'e', 'e', 'n', 'w', 'e', 'n', 'w', 'e', 'n', 'n', 'n', 'w', 'e', 's', 'w', 'e', 's', 'w', 'w', 's', 'n', 'e', 'e', 'n', 'n', 'e', 'e', 'n', 'e', 's', 'n', 'w', 'n', 'w', 'w', 'n', 'w', 'w', 's', 'n', 'w', 's', 's', 's', 'w', 'n', 'w', 'w', 'w', 'e', 'e', 'e', 's', 'w', 'w', 's', 'w', 'n', 's', 'e', 'n', 'e', 'e', 'e', 's', 's', 's', 'w', 'w', 'w', 'w', 'w', 'w', 's', 'w', 's']
 
 # TRAVERSAL TEST
 visited_rooms = set()
@@ -39,6 +348,9 @@ else:
     print(f"{len(roomGraph) - len(visited_rooms)} unvisited rooms")
 
 
+# print(world.startingRoom)
+# Room grid is roomGrid[x][y]
+# print(world.roomGrid[13][16])
 
 #######
 # UNCOMMENT TO WALK AROUND
